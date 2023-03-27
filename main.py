@@ -19,9 +19,6 @@ class Game(ShowBase):
         grassBlock.setPos(0, -2, 0)
         grassBlock.setHpr(0, 90, 0)
 
-        dirtBlock = loader.loadModel('dirt-block.glb')
-        dirtBlock.reparentTo(render)
-
         mainLight = DirectionalLight('main light')
         mainLightNodePath = render.attachNewNode(mainLight)
         mainLightNodePath.setHpr(30, -60, 0)
