@@ -15,6 +15,8 @@ class Game(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
+        self.selectedBlockType = 'grass'
+
         self.loadModels()
         self.setupLights()
         self.setupCamera()
@@ -135,19 +137,59 @@ class Game(ShowBase):
         self.accept("mouse1", self.handleLeftClick)
         self.accept("mouse3", self.handleRightClick)
 
+        self.accept("1", self.setSelectedBlockType, ['grass'])
+        self.accept("2", self.setSelectedBlockType, ['dirt'])
+        self.accept("3", self.setSelectedBlockType, ['stone'])
+
         self.accept('escape', self.releaseMouse)
+    
+    def setSelectedBlockType(self, type):
+        self.selectedBlockType = type
     
     def updateKeyMap(self, controlName, controlState):
         self.keyMap[controlName] = controlState
+
+    def addNewBlock(self, type, x, y, z):
+        newBlockNode = render.attachNewNode("new-box-placeholder")
+
+        newBlockNode.setPos(x, y, z)
+
+        if type == 'grass':
+            self.grassBlock.instanceTo(newBlockNode)
+        elif type == 'dirt':
+            self.dirtBlock.instanceTo(newBlockNode)
+        elif type == 'stone':
+            self.stoneBlock.instanceTo(newBlockNode)
+
+        blockSolid = CollisionBox((-1, -1, -1),  (1, 1, 1)) # These diagonal points are RELATIVE to the node you add the solid to, NOT absolute coords
+        blockNode = CollisionNode(f"block-{x}-{y}")
+        blockNode.addSolid(blockSolid)
+        collider = newBlockNode.attachNewNode(blockNode)
+        collider.setPythonTag("owner", newBlockNode) 
 
     def handleLeftClick(self):
         self.removeBlock()
 
     def handleRightClick(self):
-        return
+        self.placeBlock()
 
     def placeBlock(self):
-        return
+        if self.rayQueue.getNumEntries() > 0:
+            self.rayQueue.sortEntries()
+            rayHit = self.rayQueue.getEntry(0)
+            normal = rayHit.getSurfaceNormal(rayHit.getIntoNodePath())
+
+            hitNodePath = rayHit.getIntoNodePath()
+            if hitNodePath.hasPythonTag("owner"):
+                hitObject = hitNodePath.getPythonTag("owner")
+                distanceFromPlayer = hitObject.getDistance(self.camera)
+
+                if distanceFromPlayer < 14:
+                    hitBoxPos = hitObject.getPos()
+                    blockSize = 2
+
+                    newBlockPos = hitBoxPos + normal * blockSize
+                    self.addNewBlock(self.selectedBlockType, newBlockPos.x, newBlockPos.y, newBlockPos.z)
 
     def removeBlock(self):
         if self.rayQueue.getNumEntries() > 0:
@@ -219,25 +261,12 @@ class Game(ShowBase):
         for z in range(10):
             for x in range(20):
                 for y in range(20):
-                    newBlockNode = render.attachNewNode("new-box-placeholder")
-
-                    newBlockNode.setPos(
+                    self.addNewBlock(
+                        'grass' if z == 0 else 'dirt',
                         x * 2 - 20,
                         y * 2 - 20,
                         -z * 2,
                     )
-
-                    if z == 0:
-                        self.grassBlock.instanceTo(newBlockNode)
-                    else:
-                        self.dirtBlock.instanceTo(newBlockNode)
-
-                    blockSolid = CollisionBox((-1, -1, -1),  (1, 1, 1)) # These diagonal points are RELATIVE to the node you add the solid to, NOT absolute coords
-                    blockNode = CollisionNode(f"block-{x}-{y}")
-                    blockNode.addSolid(blockSolid)
-                    collider = newBlockNode.attachNewNode(blockNode)
-                    collider.setPythonTag("owner", newBlockNode)
-
 
     def setupLights(self):
         mainLight = DirectionalLight('main light')
