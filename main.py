@@ -17,9 +17,39 @@ class Game(ShowBase):
         self.generateWorld()
         self.setupControls()
         self.captureMouse()
+        self.setupTasks()
+
+    def update(self, task):
+        dt = globalClock.getDt()
+
+        if self.cameraSwingActivated:
+            md = self.win.getPointer(0)
+            mouseX = md.getX()
+            mouseY = md.getY()
+            mouseChangeX = mouseX - self.lastMouseX
+            mouseChangeY = mouseY - self.lastMouseY
+
+            currentH = self.camera.getH()
+            currentP = self.camera.getP()
+
+            self.camera.setHpr(
+                currentH - mouseChangeX * dt * self.cameraSwingFactor,
+                min(90, max(-90, currentP - mouseChangeY * dt * self.cameraSwingFactor)),
+                0
+            )
+
+            self.lastMouseX = mouseX
+            self.lastMouseY = mouseY
+
+        return task.cont
+
+    def setupTasks(self):
+        taskMgr.add(self.update, 'update')
 
     def setupCamera(self):
         self.disableMouse()
+
+        self.cameraSwingFactor = 10
 
         self.camera.setPos(0, 0, 3)
         self.camLens.setFov(80)
@@ -37,6 +67,7 @@ class Game(ShowBase):
         self.lastMouseX = md.getX()
         self.lastMouseY = md.getY()
 
+        self.cameraSwingActivated = True
         properties = WindowProperties()
         properties.setCursorHidden(True)
         properties.setMouseMode(WindowProperties.M_relative)
@@ -44,6 +75,7 @@ class Game(ShowBase):
         self.pauseScreen.hide()
 
     def releaseMouse(self):
+        self.cameraSwingActivated = False
         properties = WindowProperties()
         properties.setCursorHidden(False)
         properties.setMouseMode(WindowProperties.M_absolute)
