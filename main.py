@@ -23,25 +23,28 @@ class Game(ShowBase):
         dt = globalClock.getDt()
 
         if self.cameraSwingActivated:
-            md = self.win.getPointer(0)
-            mouseX = md.getX()
-            mouseY = md.getY()
-            mouseChangeX = mouseX - self.lastMouseX
-            mouseChangeY = mouseY - self.lastMouseY
-
-            currentH = self.camera.getH()
-            currentP = self.camera.getP()
-
-            self.camera.setHpr(
-                currentH - mouseChangeX * dt * self.cameraSwingFactor,
-                min(90, max(-90, currentP - mouseChangeY * dt * self.cameraSwingFactor)),
-                0
-            )
-
-            self.lastMouseX = mouseX
-            self.lastMouseY = mouseY
+            self.moveCameraWithMouse(dt)
 
         return task.cont
+
+    def moveCameraWithMouse(self, dt):
+        md = self.win.getPointer(0)
+        mouseX = md.getX()
+        mouseY = md.getY()
+        mouseChangeX = mouseX - self.lastMouseX
+        mouseChangeY = mouseY - self.lastMouseY
+
+        currentH = self.camera.getH()
+        currentP = self.camera.getP()
+
+        self.camera.setHpr(
+            currentH - mouseChangeX * dt * self.cameraSwingFactor,
+            min(90, max(-90, currentP - mouseChangeY * dt * self.cameraSwingFactor)),
+            0
+        )
+
+        self.lastMouseX = mouseX
+        self.lastMouseY = mouseY
 
     def setupTasks(self):
         taskMgr.add(self.update, 'update')
