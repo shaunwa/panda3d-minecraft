@@ -2,7 +2,7 @@ from math import pi, sin, cos
 
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import DirectionalLight, AmbientLight
-from panda3d.core import CollisionTraverser, CollisionNode, CollisionBox, CollisionRay, CollisionHandlerQueue
+from panda3d.core import CollisionTraverser, CollisionNode, CollisionBox, CollisionRay, CollisionHandlerQueue, CollisionHandlerPusher, BitMask32
 from panda3d.core import WindowProperties
 from panda3d.core import TransparencyAttrib
 from direct.gui.DirectGui import *
@@ -96,6 +96,7 @@ class Game(ShowBase):
 
         self.camera.setPos(0, 0, 3)
         self.camLens.setFov(80)
+        self.camLens.setNear(0.25)
 
         icon = OnscreenImage(image = "crosshairs.png",
                         pos = (0, 0, 0),
@@ -109,8 +110,27 @@ class Game(ShowBase):
         rayNode.addSolid(ray)
         rayNodePath = self.camera.attachNewNode(rayNode)
         self.rayQueue = CollisionHandlerQueue()
+        rayMask = BitMask32()
+        rayMask.setBit(1)
+        rayNode.setIntoCollideMask(rayMask)
+        rayNode.setFromCollideMask(rayMask)
         self.cTrav.addCollider(rayNodePath, self.rayQueue)
-    
+
+        playerCollisionBox = CollisionBox((-0.5, -0.5, -3), (0.5, 0.5, 0))
+        playerCollisionBoxNode = CollisionNode("playerBox")
+        playerCollisionBoxNode.addSolid(playerCollisionBox)
+
+        # We need to prevent this from colliding with "line of sight" ray
+        playerMask = BitMask32()
+        playerMask.setBit(2)
+        playerCollisionBoxNode.setIntoCollideMask(playerMask)
+        playerCollisionBoxNode.setFromCollideMask(playerMask)
+
+        playerCollider = self.camera.attachNewNode(playerCollisionBoxNode)
+        pusher = CollisionHandlerPusher()
+        pusher.addCollider(playerCollider, self.camera)
+        self.cTrav.addCollider(playerCollider, pusher) 
+
     def setupControls(self):
         self.keyMap = {
             "forward" : False,
@@ -164,6 +184,10 @@ class Game(ShowBase):
         blockSolid = CollisionBox((-1, -1, -1),  (1, 1, 1)) # These diagonal points are RELATIVE to the node you add the solid to, NOT absolute coords
         blockNode = CollisionNode(f"block-{x}-{y}")
         blockNode.addSolid(blockSolid)
+        blockMask = BitMask32()
+        blockMask.setBit(1) # We want blocks to collide with both the "line of sight" ray AND...
+        blockMask.setBit(2) # ...the player's box
+        blockNode.setFromCollideMask(blockMask)
         collider = newBlockNode.attachNewNode(blockNode)
         collider.setPythonTag("owner", newBlockNode) 
 
