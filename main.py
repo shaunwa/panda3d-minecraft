@@ -1,12 +1,18 @@
 from math import pi, sin, cos
 
+from panda3d.core import loadPrcFile
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import DirectionalLight, AmbientLight
+from panda3d.core import SamplerState
 from panda3d.core import CollisionTraverser, CollisionNode, CollisionBox, CollisionRay, CollisionHandlerQueue, CollisionHandlerPusher, BitMask32
 from panda3d.core import WindowProperties
 from panda3d.core import TransparencyAttrib
 from direct.gui.DirectGui import *
 from direct.gui.OnscreenImage import OnscreenImage 
+
+# import simplepbr
+
+loadPrcFile('settings.prc')
 
 def degToRad(degrees):
     return degrees * (pi / 180.0)
@@ -14,6 +20,8 @@ def degToRad(degrees):
 class Game(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
+
+        # simplepbr.init()
 
         self.selectedBlockType = 'grass'
 
@@ -160,6 +168,7 @@ class Game(ShowBase):
         self.accept("1", self.setSelectedBlockType, ['grass'])
         self.accept("2", self.setSelectedBlockType, ['dirt'])
         self.accept("3", self.setSelectedBlockType, ['stone'])
+        self.accept("4", self.setSelectedBlockType, ['sand'])
 
         self.accept('escape', self.releaseMouse)
     
@@ -180,6 +189,8 @@ class Game(ShowBase):
             self.dirtBlock.instanceTo(newBlockNode)
         elif type == 'stone':
             self.stoneBlock.instanceTo(newBlockNode)
+        elif type == 'sand':
+            self.sandBlock.instanceTo(newBlockNode)
 
         blockSolid = CollisionBox((-1, -1, -1),  (1, 1, 1)) # These diagonal points are RELATIVE to the node you add the solid to, NOT absolute coords
         blockNode = CollisionNode(f"block-{x}-{y}")
@@ -265,13 +276,9 @@ class Game(ShowBase):
 
     def loadModels(self):
         self.dirtBlock = loader.loadModel('dirt-block.glb')
-        self.dirtBlock.setHpr(0, 90, 0)
-
         self.stoneBlock = loader.loadModel('stone-block.glb')
-        self.stoneBlock.setHpr(0, 90, 0)
-
         self.grassBlock = loader.loadModel('grass-block.glb')
-        self.grassBlock.setHpr(0, 90, 0)
+        self.sandBlock = loader.loadModel('sand-block.glb')
 
     def setupSkybox(self):
         self.skybox = loader.loadModel('skybox')
@@ -299,7 +306,7 @@ class Game(ShowBase):
         render.setLight(mainLightNodePath)
 
         ambientLight = AmbientLight('ambient light')
-        ambientLight.setColor((0.4, 0.4, 0.4, 1))
+        ambientLight.setColor((0.3, 0.3, 0.3, 1))
         ambientLightNodePath = render.attachNewNode(ambientLight)
         render.setLight(ambientLightNodePath)
 
