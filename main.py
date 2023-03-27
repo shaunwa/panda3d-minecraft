@@ -8,6 +8,7 @@ class Game(ShowBase):
         self.loadModels()
         self.setupLights()
         self.setupCamera()
+        self.setupSkybox()
         self.generateWorld()
 
     def setupCamera(self):
@@ -24,6 +25,14 @@ class Game(ShowBase):
 
         self.grassBlock = loader.loadModel('grass-block.glb')
         self.grassBlock.setHpr(0, 90, 0)
+
+    def setupSkybox(self):
+        self.skybox = loader.loadModel('skybox')
+        self.skybox.setScale(512)
+        self.skybox.setBin('background', 1)
+        self.skybox.setDepthWrite(0)
+        self.skybox.setLightOff()
+        self.skybox.reparentTo(render)
 
     def generateWorld(self):
         for z in range(10):
