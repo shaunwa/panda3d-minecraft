@@ -1,5 +1,7 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import DirectionalLight, AmbientLight
+from panda3d.core import TransparencyAttrib
+from direct.gui.OnscreenImage import OnscreenImage 
 
 class Game(ShowBase):
     def __init__(self):
@@ -13,8 +15,22 @@ class Game(ShowBase):
 
     def setupCamera(self):
         self.disableMouse()
-        self.camera.setPos(50, -50, 50)
-        self.camera.lookAt(0, 0, 0)
+
+        self.cameraSwingFactor = 10
+        self.playerMoveSpeed = 10
+        self.cameraSwingActivated = True
+
+        self.camera.setPos(0, 0, 3)
+        self.camLens.setFov(80)
+
+        icon = OnscreenImage(image = "crosshairs.png",
+                        pos = (0, 0, 0),
+                        scale = 0.05)
+        icon.setTransparency(TransparencyAttrib.MAlpha)
+
+        md = self.win.getPointer(0)
+        self.lastMouseX = md.getX()
+        self.lastMouseY = md.getY()
 
     def loadModels(self):
         self.dirtBlock = loader.loadModel('dirt-block.glb')
