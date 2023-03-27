@@ -1,0 +1,17 @@
+1. Set up a virtual environment by running
+
+python3 -m venv venv
+
+2. Activate the virtual env by running
+
+source venv/bin/activate
+
+3. Install the specific version of panda3d by running
+
+pip install panda3d==1.10.13
+
+4. If you get an error saying "You are using pip version x.x.x", you may need to update pip by running
+
+pip install --upgrade pip
+
+5. Rerun the install command if you needed to update pip
