@@ -2,6 +2,7 @@ from math import pi, sin, cos
 
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import DirectionalLight, AmbientLight
+from panda3d.core import CollisionTraverser, CollisionNode, CollisionBox, CollisionRay, CollisionHandlerQueue
 from panda3d.core import WindowProperties
 from panda3d.core import TransparencyAttrib
 from direct.gui.DirectGui import *
@@ -98,6 +99,15 @@ class Game(ShowBase):
                         pos = (0, 0, 0),
                         scale = 0.05)
         icon.setTransparency(TransparencyAttrib.MAlpha)
+
+        self.cTrav = CollisionTraverser()
+        ray = CollisionRay()
+        ray.setFromLens(self.camNode, (0, 0))
+        rayNode = CollisionNode("cameraLookAtRay")
+        rayNode.addSolid(ray)
+        rayNodePath = self.camera.attachNewNode(rayNode)
+        self.rayQueue = CollisionHandlerQueue()
+        self.cTrav.addCollider(rayNodePath, self.rayQueue)
     
     def setupControls(self):
         self.keyMap = {
@@ -122,10 +132,36 @@ class Game(ShowBase):
         self.accept("lshift", self.updateKeyMap, ["down", True])
         self.accept("lshift-up", self.updateKeyMap, ["down", False])
 
+        self.accept("mouse1", self.handleLeftClick)
+        self.accept("mouse3", self.handleRightClick)
+
         self.accept('escape', self.releaseMouse)
     
     def updateKeyMap(self, controlName, controlState):
         self.keyMap[controlName] = controlState
+
+    def handleLeftClick(self):
+        self.removeBlock()
+
+    def handleRightClick(self):
+        return
+
+    def placeBlock(self):
+        return
+
+    def removeBlock(self):
+        if self.rayQueue.getNumEntries() > 0:
+            self.rayQueue.sortEntries()
+            rayHit = self.rayQueue.getEntry(0)
+
+            hitNodePath = rayHit.getIntoNodePath()
+            if hitNodePath.hasPythonTag("owner"):
+                hitObject = hitNodePath.getPythonTag("owner")
+                distanceFromPlayer = hitObject.getDistance(self.camera)
+
+                if distanceFromPlayer < 12:
+                    hitNodePath.clearPythonTag("owner")
+                    hitObject.removeNode()
     
     def captureMouse(self):
         md = self.win.getPointer( 0 )
@@ -195,6 +231,12 @@ class Game(ShowBase):
                         self.grassBlock.instanceTo(newBlockNode)
                     else:
                         self.dirtBlock.instanceTo(newBlockNode)
+
+                    blockSolid = CollisionBox((-1, -1, -1),  (1, 1, 1)) # These diagonal points are RELATIVE to the node you add the solid to, NOT absolute coords
+                    blockNode = CollisionNode(f"block-{x}-{y}")
+                    blockNode.addSolid(blockSolid)
+                    collider = newBlockNode.attachNewNode(blockNode)
+                    collider.setPythonTag("owner", newBlockNode)
 
 
     def setupLights(self):
