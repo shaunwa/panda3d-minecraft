@@ -281,7 +281,7 @@ class Game(ShowBase):
         self.sandBlock = loader.loadModel('sand-block.glb')
 
     def setupSkybox(self):
-        self.skybox = loader.loadModel('skybox')
+        self.skybox = loader.loadModel('skybox/skybox.egg')
         self.skybox.setScale(512)
         self.skybox.setBin('background', 1)
         self.skybox.setDepthWrite(0)
