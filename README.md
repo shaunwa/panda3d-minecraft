@@ -1,0 +1,1 @@
+This is a project used to teach the basics of using Panda3d.
